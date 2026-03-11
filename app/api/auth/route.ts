@@ -7,8 +7,8 @@ function computeToken(password: string, secret: string): string {
 
 export async function POST(req: NextRequest) {
   const { password } = await req.json();
-  const correctPassword = process.env.AUTH_PASSWORD;
-  const secret = process.env.AUTH_SECRET;
+  const correctPassword = process.env.AUTH_PASSWORD?.trim();
+  const secret = process.env.AUTH_SECRET?.trim();
 
   if (!correctPassword || !secret) {
     return NextResponse.json({ error: "Auth not configured" }, { status: 500 });

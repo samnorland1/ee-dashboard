@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 async function verifyToken(token: string): Promise<boolean> {
-  const password = process.env.AUTH_PASSWORD;
-  const secret = process.env.AUTH_SECRET;
+  const password = process.env.AUTH_PASSWORD?.trim();
+  const secret = process.env.AUTH_SECRET?.trim();
   if (!password || !secret) return true; // no auth configured → open access
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
