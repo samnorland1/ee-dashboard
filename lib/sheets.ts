@@ -126,6 +126,7 @@ export async function getAllDashboardData(): Promise<DashboardData> {
         `${CURRENT_TAB}!A49:V62`,  // [0] current tab summary
         `${CURRENT_TAB}!I68:J74`,  // [1] investment section
         `${CURRENT_TAB}!R49:S62`,  // [2] other info (lifetime totals)
+        `${CURRENT_TAB}!S57`,      // [3] year turnover total
       ],
     });
 
@@ -133,6 +134,7 @@ export async function getAllDashboardData(): Promise<DashboardData> {
     const s = vr[0]?.values || [];
     const inv = vr[1]?.values || [];
     const oi = vr[2]?.values || [];
+    const yearTurnoverRaw = vr[3]?.values || [];
 
     // --- Current tab KPIs ---
     const statsRow = s[1] || [];
@@ -178,7 +180,7 @@ export async function getAllDashboardData(): Promise<DashboardData> {
     // Lifetime totals
     const freelancingLifetime = parseNum((oi[4] || [])[1]);
     const freelancingLifetimeUSD = parseNum((oi[5] || [])[1]);
-    const yearTurnoverTotal = parseNum((oi[8] || [])[1]);
+    const yearTurnoverTotal = parseNum((yearTurnoverRaw[0] || [])[0]);
 
     // --- Historical data (fetch separately, ignore missing tabs) ---
     let historical: YearData[] = [];
