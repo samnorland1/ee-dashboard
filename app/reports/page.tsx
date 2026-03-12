@@ -1,10 +1,8 @@
 import Sidebar from "@/components/Sidebar";
-import { getAllDashboardData } from "@/lib/sheets";
-
-export const revalidate = 300;
+import { getCachedDashboardData } from "@/lib/sheets";
 
 export default async function ReportsPage() {
-  const data = await getAllDashboardData();
+  const data = await getCachedDashboardData();
   const { monthly, historical } = data;
 
   // Group historical by year (combine H1 + H2)

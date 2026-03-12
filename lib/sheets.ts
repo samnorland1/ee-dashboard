@@ -1,4 +1,5 @@
 import { google } from "googleapis";
+import { unstable_cache } from "next/cache";
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID!;
 
@@ -103,6 +104,12 @@ function parseTabRows(rows: string[][], year: number, half: "H1" | "H2" | "full"
   return { year, half, tab, bankTotal, bankTotalUSD, hours: totalHours, perHour, jobs: months.reduce((s, m) => s + m.jobs, 0), months };
 }
 
+export const getCachedDashboardData = unstable_cache(
+  async () => getAllDashboardData(),
+  ["dashboard-data"],
+  { revalidate: 300 }
+);
+
 export async function getAllDashboardData(): Promise<DashboardData> {
   if (!process.env.SPREADSHEET_ID || !process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
     return getMockData();
@@ -112,18 +119,17 @@ export async function getAllDashboardData(): Promise<DashboardData> {
     const auth = getGoogleAuth();
     const sheets = google.sheets({ version: "v4", auth });
 
-    // Batch fetch: current tab summary sections + all tabs' full data
-    const response = await sheets.spreadsheets.values.batchGet({
+    // Fetch current tab data (required)
+    const mainResponse = await sheets.spreadsheets.values.batchGet({
       spreadsheetId: SPREADSHEET_ID,
       ranges: [
         `${CURRENT_TAB}!A49:V62`,  // [0] current tab summary
-        `${CURRENT_TAB}!I68:J74`,  // [1] investment section (Jan row 68 → Total row 74)
+        `${CURRENT_TAB}!I68:J74`,  // [1] investment section
         `${CURRENT_TAB}!R49:S62`,  // [2] other info (lifetime totals)
-        ...ALL_TABS.map(({ tab }) => `'${tab}'!A2:R120`), // [3+] all tabs full data
       ],
     });
 
-    const vr = response.data.valueRanges || [];
+    const vr = mainResponse.data.valueRanges || [];
     const s = vr[0]?.values || [];
     const inv = vr[1]?.values || [];
     const oi = vr[2]?.values || [];
@@ -137,7 +143,7 @@ export async function getAllDashboardData(): Promise<DashboardData> {
 
     const targetRow = s[3] || [];
     const targetProgress = parseNum(targetRow[3]);
-    const targetAmount = targetProgress > 0 ? Math.round((bankTotal / targetProgress) * 100) : 0;
+    const targetAmount = 115000;
 
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
     const monthly: MonthlyData[] = monthNames.map((month, i) => {
@@ -174,11 +180,29 @@ export async function getAllDashboardData(): Promise<DashboardData> {
     const freelancingLifetimeUSD = parseNum((oi[5] || [])[1]);
     const yearTurnoverTotal = parseNum((oi[8] || [])[1]);
 
-    // --- Historical data from all tabs ---
-    const historical: YearData[] = ALL_TABS.map(({ tab, year, half }, i) => {
-      const rows = (vr[3 + i]?.values || []) as string[][];
-      return parseTabRows(rows, year, half, tab);
-    });
+    // --- Historical data (fetch separately, ignore missing tabs) ---
+    let historical: YearData[] = [];
+    try {
+      // First discover actual tab names in the spreadsheet
+      const meta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID, fields: "sheets.properties.title" });
+      const existingTabs = new Set((meta.data.sheets || []).map((sh) => sh.properties?.title ?? ""));
+
+      const validTabs = ALL_TABS.filter(({ tab }) => existingTabs.has(tab));
+      if (validTabs.length > 0) {
+        const histResponse = await sheets.spreadsheets.values.batchGet({
+          spreadsheetId: SPREADSHEET_ID,
+          ranges: validTabs.map(({ tab }) => `'${tab}'!A2:R120`),
+        });
+        const hvr = histResponse.data.valueRanges || [];
+        historical = validTabs.map(({ tab, year, half }, i) => {
+          const rows = (hvr[i]?.values || []) as string[][];
+          return parseTabRows(rows, year, half, tab);
+        });
+      }
+      console.log("Available tabs:", [...existingTabs].join(", "));
+    } catch {
+      // Historical tabs missing or inaccessible — continue with empty history
+    }
 
     return {
       summary: {
@@ -216,7 +240,7 @@ export function getMockData(): DashboardData {
       freelancingLifetimeUSD: 506884.35,
       yearTurnoverTotal: 34083.54,
       targetYear: 2026,
-      targetAmount: 116558,
+      targetAmount: 115000,
       targetProgress: 28,
     },
     monthly: [
