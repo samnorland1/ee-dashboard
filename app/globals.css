@@ -217,30 +217,76 @@ body::before {
 }
 
 /* ── Mobile responsive ───────────────────────────────────── */
+.mobile-logo { display: none; }
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+#dashboard-main {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Table scroll — always wrap with horizontal scroll */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll table {
+  min-width: 420px;
+}
+
 @media (max-width: 768px) {
-  /* Hide sidebar, show full-width content */
   aside {
     display: none !important;
+  }
+
+  .mobile-logo {
+    display: block;
+    margin-bottom: 20px;
   }
 
   #dashboard-main {
     padding: 16px !important;
   }
 
-  /* Stack all grid columns */
-  [style*="grid-template-columns: repeat(4"] {
+  .page-header {
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+  }
+
+  /* 4-col → 2-col */
+  .grid-4col {
     grid-template-columns: 1fr 1fr !important;
   }
 
-  [style*="grid-template-columns: 2fr 1fr"],
-  [style*="grid-template-columns: repeat(3"] {
+  /* 2-col charts/bottom → stacked */
+  .grid-2col {
     grid-template-columns: 1fr !important;
+  }
+
+  /* Year tabs scroll horizontally */
+  .year-tabs-row {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 4px !important;
+  }
+
+  .live-label {
+    display: none !important;
+  }
+
+  /* Tighten GoalTracker on mobile */
+  .card {
+    overflow: hidden;
   }
 }
 
 @media (max-width: 480px) {
-  [style*="grid-template-columns: repeat(4"],
-  [style*="grid-template-columns: 1fr 1fr"] {
+  /* 2-col KPI → 1-col on small phones */
+  .grid-4col {
     grid-template-columns: 1fr !important;
   }
 }

@@ -130,7 +130,7 @@ export default function GoalTracker({ progress, current, target, year }: GoalTra
       </div>
 
       {/* Stats row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 28 }}>
+      <div className="grid-4col" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 28 }}>
         {[
           { label: "Remaining", value: `£${remaining.toLocaleString("en-GB", { maximumFractionDigits: 0 })}` },
           { label: "Needed / mo", value: neededPerMonth > 0 ? `£${neededPerMonth.toLocaleString("en-GB", { maximumFractionDigits: 0 })}` : "—" },

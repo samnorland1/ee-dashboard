@@ -1,5 +1,4 @@
 import { google } from "googleapis";
-import { unstable_cache } from "next/cache";
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID!;
 
@@ -103,12 +102,6 @@ function parseTabRows(rows: string[][], year: number, half: "H1" | "H2" | "full"
 
   return { year, half, tab, bankTotal, bankTotalUSD, hours: totalHours, perHour, jobs: months.reduce((s, m) => s + m.jobs, 0), months };
 }
-
-export const getCachedDashboardData = unstable_cache(
-  async () => getAllDashboardData(),
-  ["dashboard-data"],
-  { revalidate: 300 }
-);
 
 export async function getAllDashboardData(): Promise<DashboardData> {
   if (!process.env.SPREADSHEET_ID || !process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {

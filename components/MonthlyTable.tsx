@@ -10,6 +10,7 @@ export default function MonthlyTable({ data }: { data: MonthlyData[] }) {
       opacity: 0,
     }}>
       <div className="label" style={{ marginBottom: 16 }}>Monthly Breakdown</div>
+      <div className="table-scroll">
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
@@ -77,6 +78,7 @@ export default function MonthlyTable({ data }: { data: MonthlyData[] }) {
           </tr>
         </tfoot>
       </table>
+      </div>
     </div>
   );
 }

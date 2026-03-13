@@ -1,4 +1,6 @@
-import { getCachedDashboardData } from "@/lib/sheets";
+import { getAllDashboardData } from "@/lib/sheets";
+
+export const revalidate = 300;
 import Sidebar from "@/components/Sidebar";
 import ZoomControl from "@/components/ZoomControl";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -6,7 +8,7 @@ import OverviewClient from "@/components/OverviewClient";
 import MobileLogo from "@/components/MobileLogo";
 
 export default async function DashboardPage() {
-  const data = await getCachedDashboardData();
+  const data = await getAllDashboardData();
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
