@@ -101,7 +101,7 @@ export default function OverviewClient({ data }: Props) {
   const yearYoY = priorYearEarnings > 0 ? ((yearTotalEarnings - priorYearEarnings) / priorYearEarnings) * 100 : undefined;
 
   const kpiRow1 = (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+    <div className="grid-4col" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
       <MetricCard
         label={`Bank Total · ${selectedYear}`}
         value={`£${yearTotalEarnings.toLocaleString("en-GB", { minimumFractionDigits: 2 })}`}
@@ -118,9 +118,9 @@ export default function OverviewClient({ data }: Props) {
   );
 
   const kpiRow2 = (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+    <div className="grid-4col" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
       <MetricCard label="Freelancing Lifetime" value={`£${(summary.freelancingLifetime / 1000).toFixed(1)}k`} sub={`$${(summary.freelancingLifetimeUSD / 1000).toFixed(1)}k USD`} delay={200} />
-      <MetricCard label={`Year Turnover · ${selectedYear}`} value={`£${yearTotalEarnings.toLocaleString("en-GB", { maximumFractionDigits: 0 })}`} delay={250} />
+      <MetricCard label={`Year Turnover · ${selectedYear}`} value={`£${(isCurrentYear ? summary.yearTurnoverTotal : yearStats.bankTotal).toLocaleString("en-GB", { maximumFractionDigits: 0 })}`} delay={250} />
       <MetricCard label="Investment Pool (20%)" value={`£${investment.total.toLocaleString("en-GB", { minimumFractionDigits: 2 })}`} sub="Reinvestment fund" delay={300} />
       <MetricCard
         label="Last 12 Months"
@@ -143,14 +143,14 @@ export default function OverviewClient({ data }: Props) {
   ) : null;
 
   const chartsRow = (
-    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
+    <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
       <EarningsChart data={yearMonthly} />
       <HoursChart data={yearMonthly} />
     </div>
   );
 
   const bottomRow = (
-    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
+    <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
       <MonthlyTable data={yearMonthly} />
       <ClientBreakdown data={data} />
     </div>
@@ -167,7 +167,7 @@ export default function OverviewClient({ data }: Props) {
   return (
     <>
       {/* Year tabs */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+      <div className="year-tabs-row" style={{ display: "flex", gap: 8, marginBottom: 24 }}>
         {YEARS.map(year => {
           const active = year === selectedYear;
           const c = YEAR_COLORS[year];
@@ -206,7 +206,7 @@ export default function OverviewClient({ data }: Props) {
             </button>
           );
         })}
-        <div style={{
+        <div className="live-label" style={{
           marginLeft: "auto",
           display: "flex",
           alignItems: "center",
@@ -214,6 +214,7 @@ export default function OverviewClient({ data }: Props) {
           fontSize: 11,
           color: "var(--color-text-dim)",
           fontFamily: "var(--font-mono)",
+          flexShrink: 0,
         }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: YEAR_COLORS[selectedYear].color, display: "inline-block" }} />
           {selectedYear === currentYear ? "Live · current year" : `Historical · ${selectedYear}`}
