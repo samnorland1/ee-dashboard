@@ -45,7 +45,7 @@ const ALL_TABS = [
   { tab: "2022 Q1-Q2", year: 2022, half: "H1" as const },
 ];
 
-const CURRENT_TAB = "'2026 Q1-Q2'";
+const CURRENT_TAB = "'2026 Q3-Q4'";
 
 /** Parse a full tab's raw rows into structured YearData */
 function parseTabRows(rows: string[][], year: number, half: "H1" | "H2" | "full", tab: string): YearData {
@@ -116,10 +116,10 @@ export async function getAllDashboardData(): Promise<DashboardData> {
     const mainResponse = await sheets.spreadsheets.values.batchGet({
       spreadsheetId: SPREADSHEET_ID,
       ranges: [
-        `${CURRENT_TAB}!A49:V62`,  // [0] current tab summary
-        `${CURRENT_TAB}!I68:J74`,  // [1] investment section
-        `${CURRENT_TAB}!R49:S62`,  // [2] other info (lifetime totals)
-        `${CURRENT_TAB}!S57`,      // [3] year turnover total
+        `${CURRENT_TAB}!A68:V81`,  // [0] current tab summary
+        `${CURRENT_TAB}!I87:J93`,  // [1] investment section
+        `${CURRENT_TAB}!R68:S81`,  // [2] other info (lifetime totals)
+        `${CURRENT_TAB}!S76`,      // [3] year turnover total
       ],
     });
 
@@ -140,7 +140,7 @@ export async function getAllDashboardData(): Promise<DashboardData> {
     const targetProgress = parseNum(targetRow[3]);
     const targetAmount = 115000;
 
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+    const monthNames = ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const monthly: MonthlyData[] = monthNames.map((month, i) => {
       const row = s[4 + i] || [];
       return {
