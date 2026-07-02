@@ -56,20 +56,36 @@ export default function OverviewClient({ data }: Props) {
 
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
+  // H1 of current year is now in historical (previous half-year tab)
+  const h1OfCurrentYear = historical.find(h => h.year === currentYear && h.half === "H1");
+
+  // Full 12-month view for current year: H1 historical + H2 current
+  const fullYearMonthly: MonthlyData[] = ALL_MONTHS.map(m => {
+    const h1Month = (h1OfCurrentYear?.months ?? []).find(x => x.month === m);
+    const h2Month = currentMonthly.find(x => x.month === m);
+    const src = h1Month ?? h2Month;
+    return { month: m, earnings: src?.earnings ?? 0, hours: src?.hours ?? 0, jobs: src?.jobs ?? 0, investment: h2Month?.investment ?? 0 };
+  });
+
+  const fullYearBankTotal = summary.bankTotal + (h1OfCurrentYear?.bankTotal ?? 0);
+  const fullYearBankTotalUSD = summary.bankTotalUSD + (h1OfCurrentYear?.bankTotalUSD ?? 0);
+  const fullYearHours = summary.totalHours + (h1OfCurrentYear?.hours ?? 0);
+  const fullYearPerHour = fullYearHours > 0 ? fullYearBankTotal / fullYearHours : 0;
+
   // Resolve data for selected year
   const isCurrentYear = selectedYear === currentYear;
   const yearMonthly = isCurrentYear
-    ? currentMonthly
+    ? fullYearMonthly
     : mergeYearData(selectedYear, historical).monthly;
 
   const yearStats = isCurrentYear
-    ? { bankTotal: summary.bankTotal, bankTotalUSD: summary.bankTotalUSD, totalHours: summary.totalHours, perHour: summary.perHour }
+    ? { bankTotal: fullYearBankTotal, bankTotalUSD: fullYearBankTotalUSD, totalHours: fullYearHours, perHour: fullYearPerHour }
     : mergeYearData(selectedYear, historical);
 
   // Elapsed months for avg calculation
   const elapsedSlice = isCurrentYear
     ? yearMonthly.slice(0, curMonthIdx + 1)
-    : yearMonthly; // full year for past years
+    : yearMonthly;
 
   const activeMonths = elapsedSlice.filter(m => m.earnings > 0);
   const computedAvgPerMonth = activeMonths.length > 0
@@ -78,25 +94,29 @@ export default function OverviewClient({ data }: Props) {
 
   const accentColor = YEAR_COLORS[selectedYear]?.color ?? "#818cf8";
 
-  // Last 12 months (current year only — keep existing logic)
-  const H1_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-  const last12Current = currentMonthly.slice(0, curMonthIdx + 1).reduce((s, m) => s + m.earnings, 0);
-  const prevH1 = historical.find(h => h.year === 2025 && h.half === "H1");
-  const prevH2 = historical.find(h => h.year === 2025 && h.half === "H2");
-  const last12PrevH1 = (prevH1?.months ?? []).filter(m => H1_MONTHS.indexOf(m.month) > curMonthIdx).reduce((s, m) => s + m.earnings, 0);
-  const last12PrevH2 = (prevH2?.months ?? []).reduce((s, m) => s + m.earnings, 0);
-  const last12Total = last12Current + last12PrevH1 + last12PrevH2;
-  const priorH1_2025 = (prevH1?.months ?? []).filter(m => H1_MONTHS.indexOf(m.month) <= curMonthIdx).reduce((s, m) => s + m.earnings, 0);
-  const priorH2_2024 = historical.find(h => h.year === 2024 && h.half === "H2");
-  const priorH1_2024 = historical.find(h => h.year === 2024 && h.half === "H1");
-  const prior12PrevH1 = (priorH1_2024?.months ?? []).filter(m => H1_MONTHS.indexOf(m.month) > curMonthIdx).reduce((s, m) => s + m.earnings, 0);
-  const prior12PrevH2 = (priorH2_2024?.months ?? []).reduce((s, m) => s + m.earnings, 0);
-  const prior12Total = priorH1_2025 + prior12PrevH1 + prior12PrevH2;
+  // Build earnings map (year → month → earnings) from all historical + current H2 months
+  const earningsByYearMonth: Record<number, Record<string, number>> = {};
+  const addToMap = (year: number, months: { month: string; earnings: number }[]) => {
+    if (!earningsByYearMonth[year]) earningsByYearMonth[year] = {};
+    for (const m of months) earningsByYearMonth[year][m.month] = (earningsByYearMonth[year][m.month] ?? 0) + m.earnings;
+  };
+  for (const h of historical) addToMap(h.year, h.months);
+  addToMap(currentYear, currentMonthly);
+
+  // Last 12 months: rolling window ending at current month
+  let last12Total = 0, prior12Total = 0;
+  for (let offset = 0; offset < 12; offset++) {
+    let mi = curMonthIdx - offset;
+    let y = currentYear;
+    if (mi < 0) { mi += 12; y -= 1; }
+    last12Total += earningsByYearMonth[y]?.[ALL_MONTHS[mi]] ?? 0;
+    prior12Total += earningsByYearMonth[y - 1]?.[ALL_MONTHS[mi]] ?? 0;
+  }
   const last12YoY = prior12Total > 0 ? ((last12Total - prior12Total) / prior12Total) * 100 : undefined;
 
   // Year-on-year comparison for selected year vs prior year
   const priorYearStats = selectedYear > 2023 ? mergeYearData(selectedYear - 1, historical) : null;
-  const yearTotalEarnings = isCurrentYear ? summary.bankTotal : yearStats.bankTotal;
+  const yearTotalEarnings = isCurrentYear ? fullYearBankTotal : yearStats.bankTotal;
   const priorYearEarnings = priorYearStats?.bankTotal ?? 0;
   const yearYoY = priorYearEarnings > 0 ? ((yearTotalEarnings - priorYearEarnings) / priorYearEarnings) * 100 : undefined;
 
@@ -136,7 +156,7 @@ export default function OverviewClient({ data }: Props) {
   const goalTile = isCurrentYear ? (
     <GoalTracker
       progress={summary.targetProgress}
-      current={summary.bankTotal}
+      current={fullYearBankTotal}
       target={summary.targetAmount}
       year={summary.targetYear}
     />
