@@ -1,7 +1,7 @@
 import { getAllDashboardData } from "@/lib/sheets";
-
-export const revalidate = 300;
 import Sidebar from "@/components/Sidebar";
+
+export const revalidate = 0;
 import ZoomControl from "@/components/ZoomControl";
 import ThemeToggle from "@/components/ThemeToggle";
 import OverviewClient from "@/components/OverviewClient";

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAllDashboardData } from "@/lib/sheets";
 
-export const revalidate = 300; // revalidate every 5 minutes
+export const revalidate = 0;
 
 export async function GET() {
   try {
