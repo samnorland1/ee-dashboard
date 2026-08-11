@@ -153,12 +153,21 @@ export default function OverviewClient({ data }: Props) {
     </div>
   );
 
+  // Projected year-end: avg per completed month × remaining months
+  const completedMonths = fullYearMonthly.filter(m => m.earnings > 0);
+  const avgPerCompletedMonth = completedMonths.length > 0 ? fullYearBankTotal / completedMonths.length : 0;
+  const projectedYearEnd = fullYearBankTotal + ((12 - completedMonths.length) * avgPerCompletedMonth);
+  const priorYearTotal = priorYearStats?.bankTotal ?? 0;
+
   const goalTile = isCurrentYear ? (
     <GoalTracker
       progress={summary.targetProgress}
       current={fullYearBankTotal}
       target={summary.targetAmount}
       year={summary.targetYear}
+      projected={projectedYearEnd}
+      priorYearTotal={priorYearTotal}
+      priorYear={currentYear - 1}
     />
   ) : null;
 

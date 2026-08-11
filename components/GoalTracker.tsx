@@ -6,9 +6,12 @@ interface GoalTrackerProps {
   current: number;
   target: number;
   year: number;
+  projected: number;
+  priorYearTotal: number;
+  priorYear: number;
 }
 
-export default function GoalTracker({ progress, current, target, year }: GoalTrackerProps) {
+export default function GoalTracker({ progress, current, target, year, projected, priorYearTotal, priorYear }: GoalTrackerProps) {
   const [barWidth, setBarWidth] = useState(0);
 
   useEffect(() => {
@@ -21,6 +24,10 @@ export default function GoalTracker({ progress, current, target, year }: GoalTra
   const monthsLeft = 12 - (new Date().getMonth() + 1);
   const neededPerMonth = monthsLeft > 0 ? remaining / monthsLeft : 0;
   const onTrack = neededPerMonth <= (current / Math.max(new Date().getMonth(), 1));
+
+  const projectedDelta = priorYearTotal > 0 ? projected - priorYearTotal : 0;
+  const projectedPct = priorYearTotal > 0 ? (projectedDelta / priorYearTotal) * 100 : 0;
+  const projectedUp = projectedDelta >= 0;
 
   // Segment markers at 25%, 50%, 75%
   const markers = [25, 50, 75];
@@ -156,6 +163,44 @@ export default function GoalTracker({ progress, current, target, year }: GoalTra
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Projection row */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+        <div style={{
+          background: "var(--color-surface-2)",
+          border: "1px solid var(--color-border)",
+          borderRadius: 2,
+          padding: "10px 14px",
+        }}>
+          <div className="label" style={{ marginBottom: 5 }}>Projected Year-End</div>
+          <div style={{ fontSize: 13, fontFamily: "var(--font-mono)", fontWeight: 500, color: "var(--color-text)" }}>
+            £{projected.toLocaleString("en-GB", { maximumFractionDigits: 0 })}
+          </div>
+        </div>
+        <div style={{
+          background: "var(--color-surface-2)",
+          border: "1px solid var(--color-border)",
+          borderRadius: 2,
+          padding: "10px 14px",
+        }}>
+          <div className="label" style={{ marginBottom: 5 }}>vs {priorYear}</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span style={{ fontSize: 13, fontFamily: "var(--font-mono)", fontWeight: 500, color: "var(--color-text)" }}>
+              £{priorYearTotal.toLocaleString("en-GB", { maximumFractionDigits: 0 })}
+            </span>
+            {priorYearTotal > 0 && (
+              <span style={{
+                fontSize: 11,
+                fontFamily: "var(--font-mono)",
+                fontWeight: 500,
+                color: projectedUp ? "var(--color-green)" : "var(--color-red)",
+              }}>
+                {projectedUp ? "↑" : "↓"}{Math.abs(projectedPct).toFixed(1)}%
+              </span>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
