@@ -153,10 +153,15 @@ export default function OverviewClient({ data }: Props) {
     </div>
   );
 
-  // Projected year-end: avg per completed month × remaining months
-  const completedMonths = fullYearMonthly.filter(m => m.earnings > 0);
-  const avgPerCompletedMonth = completedMonths.length > 0 ? fullYearBankTotal / completedMonths.length : 0;
-  const projectedYearEnd = fullYearBankTotal + ((12 - completedMonths.length) * avgPerCompletedMonth);
+  // Projected year-end: only count elapsed months (up to today) with earnings,
+  // so future months already entered in the sheet don't shrink the remaining count
+  const elapsedMonthsWithEarnings = fullYearMonthly
+    .slice(0, curMonthIdx + 1)
+    .filter(m => m.earnings > 0);
+  const activeMonthCount = Math.max(elapsedMonthsWithEarnings.length, 1);
+  const avgPerActiveMonth = fullYearBankTotal / activeMonthCount;
+  const monthsRemainingInYear = 12 - (curMonthIdx + 1);
+  const projectedYearEnd = fullYearBankTotal + (monthsRemainingInYear * avgPerActiveMonth);
   const priorYearTotal = priorYearStats?.bankTotal ?? 0;
 
   const goalTile = isCurrentYear ? (
