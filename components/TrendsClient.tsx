@@ -119,9 +119,9 @@ export default function TrendsClient({ years, lifetimeTotal, lifetimeTotalUSD, c
     for (const y of years) {
       const m = y.months.find(x => x.month === month);
       const isFuture = y.year === currentYear && monthIdx > currentMonthIdx;
-      point[String(y.year)] = isFuture
-        ? null
-        : metric === "earnings" ? (m?.earnings ?? 0) : (m?.hours ?? 0);
+      const val = metric === "earnings" ? (m?.earnings ?? 0) : (m?.hours ?? 0);
+      // null for future months OR months with no activity — avoids flat £0 lines
+      point[String(y.year)] = (isFuture || val === 0) ? null : val;
     }
     return point;
   });
@@ -259,12 +259,12 @@ export default function TrendsClient({ years, lifetimeTotal, lifetimeTotalUSD, c
             {years.map(y => (
               <Line
                 key={y.year}
-                type="monotone"
+                type="linear"
                 dataKey={String(y.year)}
                 stroke={YEAR_COLORS[y.year] ?? "#818cf8"}
                 strokeWidth={1.5}
-                dot={false}
-                activeDot={{ r: 3, strokeWidth: 0 }}
+                dot={{ r: 2.5, strokeWidth: 0, fill: YEAR_COLORS[y.year] ?? "#818cf8" }}
+                activeDot={{ r: 4, strokeWidth: 0 }}
                 connectNulls={false}
               />
             ))}
